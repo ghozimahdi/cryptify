@@ -1,12 +1,13 @@
 use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
 use std::path::Path;
+use uuid::Uuid;
 
 pub fn sync() {
     modify_pbxproj();
 }
 
-fn modify_pbxproj() {
+pub fn modify_pbxproj() {
     let project_pbxproj_path = "packages/app/ios/Runner.xcodeproj/project.pbxproj";
 
     let mut pbxproj_content = String::new();
@@ -19,31 +20,15 @@ fn modify_pbxproj() {
     file.read_to_string(&mut pbxproj_content)
         .expect("Failed to read project.pbxproj");
 
-    let crashlytics_shell_script = r#"
-# Extract the environment from the configuration name
-environment=$(echo "$CONFIGURATION" | awk -F'-' '{print tolower($2)}')
+    let crashlytics_uuid = Uuid::new_v4().as_simple().to_string();
+    let copy_plist_uuid = Uuid::new_v4().as_simple().to_string();
 
-# Define the directory for the firebase_app_id_file.json file
-JSON_DIR="${PROJECT_DIR}/config/${environment}"
-
-# Run the upload-symbols script with the input files
-"${PODS_ROOT}/FirebaseCrashlytics/upload-symbols" --flutter-project "$PROJECT_DIR" --google-service-plist "${JSON_DIR}/GoogleService-Info.plist"
-"#;
-
-    let copy_shell_script = r#"
-# Extract the environment from the configuration name
-environment=$(echo "$CONFIGURATION" | awk -F'-' '{print tolower($2)}')
-
-# Define the directory for the GoogleService-Info.plist file
-PLIST_DIR="${PROJECT_DIR}/config/${environment}"
-
-# Copy the correct GoogleService-Info.plist for the current environment into the app bundle
-cp "${PLIST_DIR}/GoogleService-Info.plist" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist"
-"#;
+    let crashlytics_shell_script = r#"# Extract the environment from the configuration name\nenvironment=$(echo \"$CONFIGURATION\" | awk -F'-' '{print tolower($2)}')\n\n# Define the directory for the firebase_app_id_file.json file\nJSON_DIR=\"${PROJECT_DIR}/config/${environment}\"\n\n# Run the upload-symbols script with the input files\n\"${PODS_ROOT}/FirebaseCrashlytics/upload-symbols\" --flutter-project \"$PROJECT_DIR\" --google-service-plist \"${JSON_DIR}/GoogleService-Info.plist\"\n"#;
+    let copy_shell_script = r#"# Extract the environment from the configuration name\nenvironment=$(echo \"$CONFIGURATION\" | awk -F'-' '{print tolower($2)}')\n\n# Define the directory for the GoogleService-Info.plist file\nPLIST_DIR=\"${PROJECT_DIR}/config/${environment}\"\n\n# Copy the correct GoogleService-Info.plist for the current environment into the app bundle\ncp \"${PLIST_DIR}/GoogleService-Info.plist\" \"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist\"\n"#;
 
     let firebase_crashlytics_phase = format!(
         r#"
-        /* [firebase_crashlytics] Crashlytics Upload Symbols */ = {{
+        {crashlytics_uuid} /* [firebase_crashlytics] Crashlytics Upload Symbols */ = {{
             isa = PBXShellScriptBuildPhase;
             buildActionMask = 2147483647;
             files = (
@@ -72,7 +57,7 @@ cp "${PLIST_DIR}/GoogleService-Info.plist" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME
 
     let firebase_copy_phase = format!(
         r#"
-        /* [firebase] Copy GoogleService-Info.plist to the correct location */ = {{
+        {copy_plist_uuid} /* [firebase] Copy GoogleService-Info.plist to the correct location */ = {{
             isa = PBXShellScriptBuildPhase;
             buildActionMask = 2147483647;
             files = (
