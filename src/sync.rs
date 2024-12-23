@@ -20,6 +20,14 @@ pub fn modify_pbxproj() {
     file.read_to_string(&mut pbxproj_content)
         .expect("Failed to read project.pbxproj");
 
+    if pbxproj_content.contains("[firebase_crashlytics] Crashlytics Upload Symbols")
+        || pbxproj_content
+            .contains("[firebase] Copy GoogleService-Info.plist to the correct location")
+    {
+        println!("Configurations already exist. No changes made.");
+        return;
+    }
+
     let crashlytics_uuid = Uuid::new_v4().as_simple().to_string();
     let copy_plist_uuid = Uuid::new_v4().as_simple().to_string();
 
