@@ -11,6 +11,8 @@ pub fn decrypt() {
         }
     };
 
+    #[cfg(debug_assertions)]
+    eprintln!("Key: {}", passphrase);
 
     decrypt_env(&passphrase);
     decrypt_secrets(&passphrase);

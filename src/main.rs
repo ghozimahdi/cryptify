@@ -3,7 +3,7 @@ mod decrypt;
 mod encrypt;
 mod sync;
 
-use crate::clean::{clean_up_files};
+use crate::clean::clean_up_files;
 use crate::decrypt::decrypt;
 use crate::encrypt::encrypt;
 use crate::sync::sync;
@@ -85,7 +85,9 @@ fn install_gnupg() {
 fn init() {
     println!("Initializing cryptify configuration...");
 
-    print!("Input key:");
+    print!("Input key: ");
+    io::stdout().flush().expect("Failed to flush stdout");
+
     let mut key = String::new();
     io::stdin()
         .read_line(&mut key)

@@ -1,5 +1,4 @@
 use std::fs;
-use std::io::{self, Write};
 use std::path::Path;
 use std::process::Command;
 
@@ -12,27 +11,30 @@ pub fn encrypt() {
         }
     };
 
+    #[cfg(debug_assertions)]
+    eprintln!("Key: {}", passphrase);
+
     encrypt_env(&passphrase);
     encrypt_secrets(&passphrase);
 }
 
-fn encrypt_env(passphrase: &str) {
+pub fn encrypt_env(passphrase: &str) {
     let environments = ["dev", "staging", "prod"];
     for environment in &environments {
         let input_file = format!("packages/library/core/.env_{}", environment);
         let output_file = format!("release/config/{}/env_{}.gpg", environment, environment);
 
-        encrypt_file(&passphrase, &input_file, &output_file);
+        encrypt_file(passphrase, &input_file, &output_file);
     }
 }
 
-fn encrypt_secrets(passphrase: &str) {
+pub fn encrypt_secrets(passphrase: &str) {
     let environments = ["dev", "staging", "prod"];
     for environment in &environments {
         // Encrypt Release keystore
         let keystore_input = "release/app-keystore.jks";
         let keystore_output = "release/app-keystore.jks.gpg";
-        encrypt_file(&passphrase, keystore_input, keystore_output);
+        encrypt_file(passphrase, keystore_input, keystore_output);
 
         // Encrypt Google Services key (Android)
         let android_input = format!(
@@ -40,9 +42,8 @@ fn encrypt_secrets(passphrase: &str) {
             environment
         );
         let android_output = format!("release/config/{}/google-services.json.gpg", environment);
-        encrypt_file(&passphrase, &android_input, &android_output);
+        encrypt_file(passphrase, &android_input, &android_output);
 
-        // Encrypt Google Services key (iOS)
         let ios_input = format!(
             "packages/app/ios/config/{}/GoogleService-Info.plist",
             environment
@@ -51,9 +52,8 @@ fn encrypt_secrets(passphrase: &str) {
             "release/config/{}/GoogleService-Info.plist.gpg",
             environment
         );
-        encrypt_file(&passphrase, &ios_input, &ios_output);
+        encrypt_file(passphrase, &ios_input, &ios_output);
 
-        // Encrypt firebase_app_id_file (iOS)
         let firebase_input = format!(
             "packages/app/ios/config/{}/firebase_app_id_file.json",
             environment
@@ -62,13 +62,13 @@ fn encrypt_secrets(passphrase: &str) {
             "release/config/{}/firebase_app_id_file.json.gpg",
             environment
         );
-        encrypt_file(&passphrase, &firebase_input, &firebase_output);
+        encrypt_file(passphrase, &firebase_input, &firebase_output);
     }
 }
 
 fn encrypt_file(passphrase: &str, input: &str, output: &str) {
     if Path::new(output).exists() {
-        let temp_decrypted = format!("temp_decrypted_{}.tmp", output);
+        let temp_decrypted = format!("{}_temp", output);
 
         let decrypt_status = Command::new("gpg")
             .arg("--batch")
@@ -123,26 +123,19 @@ pub fn get_passphrase() -> Option<String> {
             Ok(passphrase) => {
                 let trimmed = passphrase.trim().to_string();
                 if !trimmed.is_empty() {
+                    println!("Key read from .cryptify-key file.");
                     return Some(trimmed);
                 }
             }
             Err(err) => {
                 eprintln!("Failed to read .cryptify-key file: {}", err);
+                eprintln!(
+                    "Please run `cryptify init` to generate the .cryptify-key file or ensure it exists."
+                );
             }
         }
-    }
-
-    if let Ok(passphrase) = std::env::var("ENCRYPT_KEY") {
-        if !passphrase.is_empty() {
-            return Some(passphrase);
-        }
-    }
-
-    print!("Enter ENCRYPT_KEY: ");
-    io::stdout().flush().unwrap();
-    let mut passphrase = String::new();
-    if io::stdin().read_line(&mut passphrase).is_ok() {
-        return Some(passphrase.trim().to_string());
+    } else {
+        eprintln!("The .cryptify-key file is missing. Please run `cryptify init` to create it.");
     }
 
     None
