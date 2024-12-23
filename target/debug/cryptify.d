@@ -1,0 +1,1 @@
+/Users/mbahgojol/Project/CLI/cryptify/cryptify/target/debug/cryptify: /Users/mbahgojol/Project/CLI/cryptify/cryptify/src/clean.rs /Users/mbahgojol/Project/CLI/cryptify/cryptify/src/decrypt.rs /Users/mbahgojol/Project/CLI/cryptify/cryptify/src/encrypt.rs /Users/mbahgojol/Project/CLI/cryptify/cryptify/src/main.rs /Users/mbahgojol/Project/CLI/cryptify/cryptify/src/sync.rs
