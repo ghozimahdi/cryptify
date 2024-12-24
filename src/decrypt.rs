@@ -1,4 +1,5 @@
 use crate::encrypt::get_passphrase;
+use std::fs;
 use std::path::Path;
 use std::process::Command;
 
@@ -31,6 +32,15 @@ fn decrypt_env(passphrase: &str) {
 fn decrypt_secrets(passphrase: &str) {
     let environments = ["dev", "staging", "prod"];
     for environment in &environments {
+        // Ensure iOS config folder exists
+        let ios_config_path = format!("packages/app/ios/config/{}", environment);
+        if !Path::new(&ios_config_path).exists() {
+            if let Err(e) = fs::create_dir_all(&ios_config_path) {
+                eprintln!("Failed to create directory {}: {}", ios_config_path, e);
+                continue;
+            }
+        }
+
         // Decrypt Release keystore
         let keystore_input = "release/app-keystore.jks.gpg";
         let keystore_output = "release/app-keystore.jks";
@@ -49,10 +59,7 @@ fn decrypt_secrets(passphrase: &str) {
             "release/config/{}/GoogleService-Info.plist.gpg",
             environment
         );
-        let ios_output = format!(
-            "packages/app/ios/config/{}/GoogleService-Info.plist",
-            environment
-        );
+        let ios_output = format!("{}/GoogleService-Info.plist", ios_config_path);
         decrypt_file(&passphrase, &ios_input, &ios_output);
 
         // Decrypt firebase_app_id_file (iOS)
@@ -60,10 +67,7 @@ fn decrypt_secrets(passphrase: &str) {
             "release/config/{}/firebase_app_id_file.json.gpg",
             environment
         );
-        let firebase_output = format!(
-            "packages/app/ios/config/{}/firebase_app_id_file.json",
-            environment
-        );
+        let firebase_output = format!("{}/firebase_app_id_file.json", ios_config_path);
         decrypt_file(&passphrase, &firebase_input, &firebase_output);
     }
 }
