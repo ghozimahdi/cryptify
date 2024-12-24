@@ -48,7 +48,6 @@ pub fn modify_pbxproj() {
                 "${{DWARF_DSYM_FOLDER_PATH}}/${{DWARF_DSYM_FILE_NAME}}/Contents/",
                 "${{DWARF_DSYM_FOLDER_PATH}}/${{DWARF_DSYM_FILE_NAME}}/Contents/Info.plist",
                 "$({{TARGET_BUILD_DIR}})/$({{EXECUTABLE_PATH}})",
-                "$({{PROJECT_DIR}})/config/$(echo \"$CONFIGURATION\" | awk -F'-' '{{print tolower($2)}}')/firebase_app_id_file.json",
                 "$({{PROJECT_DIR}})/config/$(echo \"$CONFIGURATION\" | awk -F'-' '{{print tolower($2)}}')/GoogleService-Info.plist",
             );
             name = "[firebase_crashlytics] Crashlytics Upload Symbols";

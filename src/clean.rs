@@ -7,7 +7,6 @@ pub fn clean_up_files() {
     delete_files_in_pattern("packages/app/android/app/src/*/google-services.json");
 
     delete_files_in_pattern("packages/app/ios/config/*/GoogleService-Info.plist");
-    delete_files_in_pattern("packages/app/ios/config/*/firebase_app_id_file.json");
 
     delete_file("packages/app/ios/Runner/GoogleService-Info.plist");
 

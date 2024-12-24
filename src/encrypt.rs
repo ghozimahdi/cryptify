@@ -53,16 +53,6 @@ pub fn encrypt_secrets(passphrase: &str) {
             environment
         );
         encrypt_file(passphrase, &ios_input, &ios_output);
-
-        let firebase_input = format!(
-            "packages/app/ios/config/{}/firebase_app_id_file.json",
-            environment
-        );
-        let firebase_output = format!(
-            "release/config/{}/firebase_app_id_file.json.gpg",
-            environment
-        );
-        encrypt_file(passphrase, &firebase_input, &firebase_output);
     }
 }
 

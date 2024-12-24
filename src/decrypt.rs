@@ -61,14 +61,6 @@ fn decrypt_secrets(passphrase: &str) {
         );
         let ios_output = format!("{}/GoogleService-Info.plist", ios_config_path);
         decrypt_file(&passphrase, &ios_input, &ios_output);
-
-        // Decrypt firebase_app_id_file (iOS)
-        let firebase_input = format!(
-            "release/config/{}/firebase_app_id_file.json.gpg",
-            environment
-        );
-        let firebase_output = format!("{}/firebase_app_id_file.json", ios_config_path);
-        decrypt_file(&passphrase, &firebase_input, &firebase_output);
     }
 }
 
