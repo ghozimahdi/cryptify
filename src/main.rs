@@ -45,6 +45,7 @@ fn main() {
                         }
                     }
                     "encrypt" => encrypt(),
+                    "key" => set_key(&args[2]),
                     "decrypt" => decrypt(),
                     "clean" => clean_up_files(),
                     _ => println!("Unknown command. Use 'cryptify' for help."),
@@ -57,6 +58,28 @@ fn main() {
         Err(_) => {
             println!("GnuPG is not found. Installing it using Homebrew...");
             install_gnupg();
+        }
+    }
+}
+
+fn set_key(key: &str) {
+    let key = key.trim();
+
+    if key.is_empty() {
+        println!("Key cannot be empty. Initialization aborted.");
+        return;
+    }
+
+    match File::create(".cryptify-key") {
+        Ok(mut file) => {
+            if let Err(err) = file.write_all(key.as_bytes()) {
+                eprintln!("Failed to write key to file: {}", err);
+            } else {
+                println!("Key has been saved to .cryptify-key.");
+            }
+        }
+        Err(err) => {
+            eprintln!("Failed to create .cryptify-key file: {}", err);
         }
     }
 }
@@ -93,25 +116,7 @@ fn init() {
         .read_line(&mut key)
         .expect("Failed to read input");
 
-    let key = key.trim();
-
-    if key.is_empty() {
-        println!("Key cannot be empty. Initialization aborted.");
-        return;
-    }
-
-    match File::create(".cryptify-key") {
-        Ok(mut file) => {
-            if let Err(err) = file.write_all(key.as_bytes()) {
-                eprintln!("Failed to write key to file: {}", err);
-            } else {
-                println!("Key has been saved to .cryptify-key.");
-            }
-        }
-        Err(err) => {
-            eprintln!("Failed to create .cryptify-key file: {}", err);
-        }
-    }
+    set_key(&key);
 }
 
 fn add(path: &str) {
